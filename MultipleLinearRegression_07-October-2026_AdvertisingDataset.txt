@@ -1,0 +1,351 @@
+NAME : Jajula Gnana Deepak
+ ID  : 2300030263
+Email: 2300030263cseh1@gmail.com
+
+MULTIPLE LINEAR REGRESSION — ADVERTISING DATASET
+====================================================
+
+Business Scenario
+-----------------
+A consumer goods company promotes its product using three advertising
+channels:
+
+1. Television (TV)
+2. Radio
+3. Newspaper
+
+The company wants to understand how these advertising channels influence
+Sales and predict future sales from planned advertising budgets.
+
+Dataset: advertising.csv
+Model: Multiple Linear Regression
+Target: Sales
+Features: TV, Radio, Newspaper
+
+
+ IMPORT LIBRARIES
+-------------------------
+
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
+
+
+ LOAD THE DATASET
+-------------------------
+
+df = pd.read_csv("advertising.csv")
+
+print(df.head())
+print(df.shape)
+print(df.columns)
+
+
+ EXAMINE THE DATA
+-------------------------
+
+print(df.info())
+print(df.describe())
+print(df.isnull().sum())
+
+Dataset information found:
+- Rows: 200
+- Columns: 4
+- Columns: TV, Radio, Newspaper, Sales
+- Missing values: 0
+
+The first few rows are:
+
+       TV  Radio  Newspaper  Sales
+0   230.1   37.8       69.2   22.1
+1    44.5   39.3       45.1   10.4
+2    17.2   45.9       69.3   12.0
+3   151.5   41.3       58.5   16.5
+4   180.8   10.8       58.4   17.9
+
+
+ SELECT FEATURES AND TARGET
+------------------------------------
+
+X = df[["TV", "Radio", "Newspaper"]]
+y = df["Sales"]
+
+X contains the advertising budgets.
+y contains the actual Sales values.
+
+
+ SPLIT THE DATA
+-----------------------
+
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y,
+    test_size=0.20,
+    random_state=42
+)
+
+Result:
+- Training data: 160 rows
+- Testing data: 40 rows
+
+The model learns from the 160 training records and is evaluated on
+40 unseen records.
+
+
+ CREATE AND TRAIN THE MODEL
+-----------------------------------
+
+model = LinearRegression()
+
+model.fit(X_train, y_train)
+
+The model learns the relationship:
+
+Sales = Intercept
+      + TV coefficient × TV
+      + Radio coefficient × Radio
+      + Newspaper coefficient × Newspaper
+
+
+ PREDICT SALES FOR UNSEEN DATA
+--------------------------------------
+
+y_pred = model.predict(X_test)
+
+The model now predicts Sales for the 40 test records that it did not
+use during training.
+
+
+ PREDICT SALES FOR THE GIVEN BUDGET
+-------------------------------------------
+
+Budget:
+TV = 150
+Radio = 20
+Newspaper = 30
+
+new_budget = pd.DataFrame({
+    "TV": [150],
+    "Radio": [20],
+    "Newspaper": [30]
+})
+
+predicted_sales = model.predict(new_budget)
+
+print(predicted_sales)
+
+RESULT:
+Predicted Sales ≈ 15.04
+
+Therefore, when the company spends:
+TV = 150
+Radio = 20
+Newspaper = 30
+
+the model predicts approximately 15.04 units of Sales.
+
+
+ EVALUATE THE MODEL
+---------------------------
+
+mae = mean_absolute_error(y_test, y_pred)
+mse = mean_squared_error(y_test, y_pred)
+rmse = np.sqrt(mse)
+r2 = r2_score(y_test, y_pred)
+
+print("MAE:", mae)
+print("MSE:", mse)
+print("RMSE:", rmse)
+print("R2 Score:", r2)
+
+RESULTS WITH random_state=42:
+
+MAE  = 1.2748
+MSE  = 2.9078
+RMSE = 1.7052
+R²   = 0.9059
+
+Interpretation:
+- MAE of about 1.27 means the prediction is off by about 1.27 Sales
+  units on average.
+- RMSE of about 1.71 gives a slightly stronger penalty to larger errors.
+- R² of about 0.906 means the model explains approximately 90.6% of
+  the variation in Sales on this test split.
+
+ INTERPRET THE MODEL COEFFICIENTS
+------------------------------------------
+
+print("Intercept:", model.intercept_)
+print("Coefficients:", model.coef_)
+
+RESULTS:
+
+Intercept  = 4.7141
+
+TV coefficient        = 0.0545
+Radio coefficient     = 0.1009
+Newspaper coefficient = 0.0043
+
+Approximate model equation for this train/test split:
+
+Sales = 4.7141
+      + 0.0545 × TV
+      + 0.1009 × Radio
+      + 0.0043 × Newspaper
+
+
+Meaning:
+
+1. TV
+   Keeping Radio and Newspaper constant, increasing TV advertising
+   by 1 unit is associated with an increase of about 0.0545 Sales units.
+
+2. Radio
+   Keeping TV and Newspaper constant, increasing Radio advertising
+   by 1 unit is associated with an increase of about 0.1009 Sales units.
+
+3. Newspaper
+   Keeping TV and Radio constant, increasing Newspaper advertising
+   by 1 unit is associated with an increase of about 0.0043 Sales units.
+
+
+WHICH MEDIUM HAS THE STRONGEST IMPACT?
+---------------------------------------
+
+Based directly on the fitted raw coefficients in this model:
+
+Radio has the largest coefficient:
+0.1009
+
+Therefore, Radio has the strongest estimated effect per one-unit
+increase in advertising spend in this particular fitted model.
+
+Newspaper has the smallest coefficient:
+0.0043
+
+Therefore, Newspaper has the least estimated effect per one-unit
+increase.
+
+IMPORTANT:
+Raw coefficients should be compared carefully because the three
+features have different distributions/scales. If we standardize all
+features before comparing coefficients, TV shows the strongest
+relative contribution, followed by Radio, while Newspaper is almost
+negligible.
+
+For this business question, the safest conclusion is:
+- Radio has the strongest per-unit coefficient in the fitted model.
+- TV is also a very important predictor and has the strongest
+  standardized contribution.
+- Newspaper contributes very little compared with TV and Radio.
+
+
+ ACTUAL VS PREDICTED SALES VISUALIZATION
+-------------------------------------------------
+
+Use this code:
+
+plt.figure(figsize=(8, 5))
+plt.scatter(y_test, y_pred)
+
+# Perfect prediction reference line
+min_sales = min(y_test.min(), y_pred.min())
+max_sales = max(y_test.max(), y_pred.max())
+
+plt.plot(
+    [min_sales, max_sales],
+    [min_sales, max_sales],
+    linestyle="--"
+)
+
+plt.xlabel("Actual Sales")
+plt.ylabel("Predicted Sales")
+plt.title("Multiple Linear Regression: Actual vs Predicted Sales")
+plt.grid(True)
+plt.show()
+
+IMPORTANT:
+The original graph code used:
+"Actual House Price (₹ Lakhs)"
+
+That label is incorrect for this dataset.
+
+The correct labels are:
+X-axis = Actual Sales
+Y-axis = Predicted Sales
+
+How to understand the graph:
+- Each dot represents one test observation.
+- X-axis shows the real Sales value.
+- Y-axis shows the model's predicted Sales value.
+- The dashed diagonal line represents perfect prediction.
+- The closer the points are to the dashed line, the better the model.
+
+
+ BUSINESS RECOMMENDATION
+---------------------------------
+
+Recommendation:
+
+Focus more on Radio and TV advertising rather than increasing
+Newspaper spending blindly.
+
+Reason:
+The fitted model gives Radio the highest raw coefficient, while
+Newspaper has a very small coefficient. TV also has a strong
+relationship with Sales.
+
+However, the company should validate this recommendation using
+additional business experiments before making a large budget shift.
+
+
+ TECHNICAL IMPROVEMENT
+--------------------------------
+
+Technical improvement:
+
+Use cross-validation and feature engineering.
+
+For example:
+- Use K-Fold Cross-Validation instead of relying on one train/test split.
+- Check for outliers and influential observations.
+- Test polynomial or interaction features if the relationship is not
+  completely linear.
+- Compare Linear Regression with models such as Random Forest or
+  Gradient Boosting.
+- Tune and compare models using MAE, RMSE and R².
+
+
+FINAL BUSINESS CONCLUSION
+-------------------------
+
+The Multiple Linear Regression model successfully learns the
+relationship between advertising spending and Sales.
+
+For the given advertising budget:
+
+TV = 150
+Radio = 20
+Newspaper = 30
+
+Predicted Sales ≈ 15.04 units.
+
+Model performance on the test data:
+
+MAE  ≈ 1.27
+RMSE ≈ 1.71
+R²   ≈ 0.906
+
+The model explains about 90.6% of the variation in Sales on the
+selected test set.
+
+Based on the fitted raw coefficients, Radio has the strongest
+per-unit effect and Newspaper has the weakest. TV remains an important
+predictor.
+
+The business should prioritize channels supported by the model while
+using controlled experiments and additional data to confirm that the
+observed relationships lead to real-world sales improvements.
